@@ -2,8 +2,7 @@ const moment = require("moment-timezone");
 const { readdirSync, readFileSync, writeFileSync, existsSync, unlinkSync, rm } = require("fs-extra");
 const { join, resolve } = require("path");
 const { execSync } = require('child_process');
-const logger = require("./utils/log.js");
-const login = require("facebook-chat-api"); 
+const logger = require("./utils/log.js"); 
 const axios = require("axios");
 const listPackage = JSON.parse(readFileSync('./package.json')).dependencies;
 const listbuiltinModules = require("module").builtinModules;
@@ -207,13 +206,25 @@ function checkBan(checkban) {
         throw new Error(error);
     });
 }
+const login = require("fb-chat-api");
+const { writeFileSync } = require('fs');
+const appStateFile = 'appstate.json'; // مسار ملف appState
+
 function onBot({ models: botModel }) {
-    const loginData = {};
-    loginData['appState'] = appState;
-    login(loginData, async(loginError, loginApiData) => {
-        if (loginError) return logger(JSON.stringify(loginError), `ERROR`);
-        loginApiData.setOptions(global.config.FCAOption)
-        writeFileSync(appStateFile, JSON.stringify(loginApiData.getAppState(), null, '\x09'))
+    const loginData = { appState };
+
+    login(loginData, (err, api) => {
+        if (err) {
+            console.error("ERROR:", JSON.stringify(err));
+            return;
+        }
+        
+        api.setOptions(global.config.FCAOption);
+        writeFileSync(appStateFile, JSON.stringify(api.getAppState(), null, '\t'));
+        
+        // استدعاء دوال أخرى أو تشغيل وظائف إضافية هنا
+    });
+
         global.config.version = '1.2.14'
         global.client.timeStart = new Date().getTime(),
             function () {
